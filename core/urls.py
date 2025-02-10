@@ -5,19 +5,23 @@ from drf_yasg import openapi
 from rest_framework.permissions import AllowAny
 
 schema_view = get_schema_view(
-   openapi.Info(
-      title="NCC BACKEND API",
-      default_version='v1',
-      description="Test description",
-   ),
-   public=True,
+    openapi.Info(
+        title="NCC BACKEND API",
+        default_version="v1",
+        description="Test description",
+    ),
+    public=True,
     permission_classes=[AllowAny],
 )
 
 urlpatterns = [
-    path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('api/users/', include('accounts.urls')), 
-    path('auth/', include('djoser.urls')),
-    path('auth/', include('djoser.urls.jwt')),
-    path('admin/', admin.site.urls),
+    path(
+        "docs/",
+        schema_view.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui",
+    ),
+    path("api/users/", include("accounts.urls")),
+    path("auth/", include("djoser.urls")),
+    path("auth/", include("djoser.urls.jwt")),
+    path("admin/", admin.site.urls),
 ]
