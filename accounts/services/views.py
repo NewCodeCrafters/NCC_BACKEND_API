@@ -1,8 +1,8 @@
 from rest_framework import generics
 from rest_framework.response import Response
-from .models import User
-from .serializers import AdminCreateUserSerializer, UserListSerializer
-from .permissions import IsAdminUser, IsAdminOrTeacher
+from accounts.models import User
+from accounts.serializers import AdminCreateUserSerializer, UserListSerializer
+from accounts.permissions import IsAdminUser, IsAdminOrTeacher
 from rest_framework import status
 
 

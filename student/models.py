@@ -20,12 +20,12 @@ class StudentProfile(models.Model):
         return self.fee - total_paid
 
     def save(self, *args, **kwargs):
-        
-        self.fully_paid = self.balance == 0 
-        
+
+        self.fully_paid = self.balance == 0
+
         if not self.slug:
             self.slug = slugify(self.user.username)
-            
+
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -42,11 +42,11 @@ class StudentPayment(models.Model):
     )
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     date_paid = models.DateTimeField(auto_now_add=True)
-    
+
     date_paid = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)  
+        super().save(*args, **kwargs)
         if self.student:
             self.student.save()
 

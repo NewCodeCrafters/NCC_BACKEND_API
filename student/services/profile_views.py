@@ -23,7 +23,15 @@ class StudentListView(generics.ListAPIView):
 class StudentDetailListView(generics.ListAPIView):
     serializer_class = StudentProfileSerializer
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ["user__email", "user__role", "first_name", "last_name", "fee", "courses", "balance"]
+    filterset_fields = [
+        "user__email",
+        "user__role",
+        "first_name",
+        "last_name",
+        "fee",
+        "courses",
+        "balance",
+    ]
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):

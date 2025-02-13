@@ -21,12 +21,14 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             "slug",
             "balance",
         )
-        
+
+
 class LimitedStudentProfileSerializer(serializers.ModelSerializer):
     extra_kwargs = {"slug": {"read_only": True}}
+
     class Meta:
         model = StudentProfile
-        fields = ("first_name", "last_name", "slug") 
+        fields = ("first_name", "last_name", "slug")
 
 
 class StudentPaymentSerializer(serializers.ModelSerializer):
@@ -39,15 +41,16 @@ class StudentPaymentSerializer(serializers.ModelSerializer):
             "amount",
             "date_paid",
         )
-        
+
+
 class StudentAdmissionSerializers(serializers.ModelSerializer):
     student = LimitedStudentProfileSerializer(read_only=True)
-    
+
     class Meta:
         model = StudentAdmission
         fields = (
-            'student', 
-            'batch',
-            'date_start',
-            'date_end',
+            "student",
+            "batch",
+            "date_start",
+            "date_end",
         )
