@@ -9,7 +9,11 @@ class AdminCreateUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["email", "password", "role", "slug"]
-        extra_kwargs = {"password": {"write_only": True}, "slug": {"read_only": True}}
+        extra_kwargs = {
+            "password": {"write_only": True},
+            "slug": {"read_only": True},
+            "email": {"required": True},
+        }
 
     def validate_role(self, value):
         if value not in ["admin", "teacher", "student"]:

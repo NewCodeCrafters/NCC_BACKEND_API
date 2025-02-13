@@ -21,6 +21,7 @@ urlpatterns = [
         name="schema-swagger-ui",
     ),
     path("api/users/", include("accounts.urls")),
+    path('api/student/', include("student.urls")),
     path("auth/", include("djoser.urls")),
     path("auth/", include("djoser.urls.jwt")),
     path("admin/", admin.site.urls),

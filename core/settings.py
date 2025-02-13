@@ -23,28 +23,39 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', cast=bool, default=False)
+DEBUG = config("DEBUG", cast=bool, default=False)
 
 ALLOWED_HOSTS = []
 
 
 # Application definition
 
-INSTALLED_APPS = [
+DJANGO_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+]
+
+CUSTOM_USER = [
     "accounts",
+    'teacher',
+    'student',
+]
+
+THIRDPARTY_APPS = [
     "rest_framework",
     "djoser",
+    'django_filters',
     "drf_yasg",
 ]
+
+INSTALLED_APPS = DJANGO_APPS + CUSTOM_USER + THIRDPARTY_APPS
 
 AUTH_USER_MODEL = "accounts.User"
 
@@ -125,7 +136,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")  # Specify a directory for collected static files
+STATIC_ROOT = os.path.join(
+    BASE_DIR, "staticfiles"
+)  # Specify a directory for collected static files
 
 
 # Default primary key field type
@@ -142,6 +155,9 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend'
+    ],
 }
 
 SIMPLE_JWT = {
@@ -156,18 +172,16 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
+EMAIL_HOST_USER = config("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL")
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-
-# 
 
 DJOSER = {
     "PASSWORD_RESET_CONFIRM_URL": "password/reset/confirm/{uid}/{token}/",
     "SEND_CONFIRMATION_EMAIL": False,
-    "TOKEN_MODEL": None,  
+    "TOKEN_MODEL": None,
     "SEND_ACTIVATION_EMAIL": False,
     "USER_ID_FIELD": "id",
     "LOGIN_FIELD": "email",
@@ -182,4 +196,3 @@ DJOSER = {
         "user_delete": ["rest_framework.permissions.IsAdminUser"],
     },
 }
-
