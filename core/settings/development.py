@@ -16,7 +16,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')  # Directory for collected static
 
 # Additional locations of static files
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),  # Example: App-specific static files
+    os.path.join(BASE_DIR, 'staticfiles'),  # Example: App-specific static files
 ]
 
 # Media files (Uploaded by users)
