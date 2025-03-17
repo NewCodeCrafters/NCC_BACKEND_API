@@ -1,55 +1,52 @@
-from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.contrib.auth.models import BaseUserManager
-from django.utils.text import slugify
+from django.db import models
 
-
-class UserManager(BaseUserManager):
-    def create_user(self, email, password=None, role="student", **extra_fields):
-        if not email:
-            raise ValueError("The Email field must be set")
-        if role not in ["admin", "teacher", "student"]:
-            raise ValueError("Invalid role. Choose from: admin, teacher, student")
-
-        email = self.normalize_email(email)
-        user = self.model(email=email, role=role, **extra_fields)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-    def create_superuser(self, email, password=None, **extra_fields):
-        extra_fields.setdefault("is_staff", True)
-        extra_fields.setdefault("is_superuser", True)
-        extra_fields.setdefault("role", "admin")
-
-        return self.create_user(email, password, **extra_fields)
+from accounts.managers import UserManager
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    ROLE_CHOICES = [
-        ("admin", "Admin"),
-        ("teacher", "Teacher"),
-        ("student", "Student"),
-    ]
-
     email = models.EmailField(unique=True)
-    username = models.CharField(max_length=150, blank=True, null=True)
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default="student")
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
-    slug = models.SlugField(unique=True, blank=True, null=True)
+    first_name = models.CharField(max_length=30, blank=True)
+    last_name = models.CharField(max_length=30, blank=True)
+    
+    class Role(models.TextChoices):
+        STUDENT = 'STUDENT', 'Student'
+        STAFF = 'STAFF', 'Staff'
+        ADMIN = 'ADMIN', 'Admin'
 
-    objects = UserManager()
+    role = models.CharField(max_length=7, choices=Role.choices, default=Role.STUDENT)
+    is_staff = models.BooleanField(default=False)  # Required for admin access
+    is_active = models.BooleanField(default=True)  # Required for authentication
 
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["role"]
+    USERNAME_FIELD = 'email'  # Use email as the unique identifier
+    REQUIRED_FIELDS = []  # No additional fields required for createsuperuser
+
+    objects = UserManager()  # Use the custom manager
 
     def save(self, *args, **kwargs):
-        if not self.username:
-            self.username = self.email
-        if not self.slug:
-            self.slug = slugify(self.email.split("@")[0])
+        # Sync role with Django permissions
+        if self.role == User.Role.ADMIN:
+            self.is_staff = True
+            self.is_superuser = True
+        elif self.role == User.Role.STAFF:
+            self.is_staff = True
+            self.is_superuser = False
+        else:
+            self.is_staff = False
+            self.is_superuser = False
         super().save(*args, **kwargs)
 
+    def get_full_name(self):
+        """
+        Returns the first_name plus the last_name, with a space in between.
+        """
+        return f"{self.first_name} {self.last_name}".strip()
+
+    def get_short_name(self):
+        """
+        Returns the short name for the user (first_name).
+        """
+        return self.first_name
+
     def __str__(self):
-        return f"{self.email} - {self.role}"
+        return self.email

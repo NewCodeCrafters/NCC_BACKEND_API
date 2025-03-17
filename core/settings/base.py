@@ -5,7 +5,7 @@ from decouple import config
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -28,7 +28,7 @@ DJANGO_APPS = [
 
 CUSTOM_USER = [
     "accounts",
-    'teacher',
+    # 'teacher',
     'student',
 ]
 
@@ -37,6 +37,8 @@ THIRDPARTY_APPS = [
     "djoser",
     'django_filters',
     "drf_yasg",
+    'corsheaders',
+
 ]
 
 INSTALLED_APPS = DJANGO_APPS + CUSTOM_USER + THIRDPARTY_APPS
@@ -44,6 +46,7 @@ INSTALLED_APPS = DJANGO_APPS + CUSTOM_USER + THIRDPARTY_APPS
 AUTH_USER_MODEL = "accounts.User"
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # Add this line
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -52,6 +55,15 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    "https://your-frontend-domain.com",
+    "http://localhost:3000",  # For local development
+    "http://127.0.0.1:3000",  # For local development
+]
+
+# CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "core.urls"
 
@@ -125,22 +137,45 @@ SIMPLE_JWT = {
 }
 
 
+# Djoser Configuration
 DJOSER = {
-    "PASSWORD_RESET_CONFIRM_URL": "password/reset/confirm/{uid}/{token}/",
-    "SEND_CONFIRMATION_EMAIL": False,
-    "TOKEN_MODEL": None,
-    "SEND_ACTIVATION_EMAIL": False,
-    "USER_ID_FIELD": "id",
-    "LOGIN_FIELD": "email",
-    "SERIALIZERS": {
-        "user": "accounts.serializers.AdminCreateUserSerializer",
-        "current_user": "accounts.serializers.AdminCreateUserSerializer",  # Ensures correct serialization
+    'SEND_ACTIVATION_EMAIL': False,  # Disable activation emails
+    'SEND_CONFIRMATION_EMAIL': False,  # Disable confirmation emails
+    'PASSWORD_RESET_CONFIRM_URL': 'password/reset/confirm/{uid}/{token}',
+    'USERNAME_RESET_CONFIRM_URL': 'username/reset/confirm/{uid}/{token}',
+    'ACTIVATION_URL': 'activate/{uid}/{token}',
+    'USER_CREATE_PASSWORD_RETYPE': False,  # Disable password retype
+    'SET_PASSWORD_RETYPE': False,  # Disable password retype
+    'PASSWORD_RESET_CONFIRM_RETYPE': False,  # Disable password retype
+    'LOGOUT_ON_PASSWORD_CHANGE': True,  # Logout after password change
+    'PERMISSIONS': {
+        'user_list': ['rest_framework.permissions.IsAdminUser'],  # Only admin can list users
+        'user': ['rest_framework.permissions.IsAuthenticated'],  # Authenticated users can view their profile
     },
-    "PERMISSIONS": {
-        "user_create": [
-            "rest_framework.permissions.IsAdminUser"
-        ],  # Only admins can create users
-        "user_delete": ["rest_framework.permissions.IsAdminUser"],
+    'SERIALIZERS': {
+        'user': 'accounts.serializers.CustomUserSerializer',  # Custom user serializer
+        'current_user': 'accounts.serializers.CustomUserSerializer',  # Custom user serializer for current user
     },
+    'HIDE_USERS': True,  # Hide user list from non-admin users
 }
 
+# Disable signup endpoint
+DJOSER['ENDPOINTS'] = {
+    'user': 'djoser.views.UserViewSet',
+    'user_delete': 'djoser.views.UserViewSet',
+    'user_me': 'djoser.views.UserViewSet',
+    'token_create': 'djoser.views.TokenCreateView',  # Login
+    'token_destroy': 'djoser.views.TokenDestroyView',  # Logout
+}
+
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='3306', cast=int),
+    }
+}
