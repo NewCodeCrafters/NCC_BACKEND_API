@@ -2,60 +2,56 @@ from django.db import models
 from django.db.models import Sum
 from django.utils.text import slugify
 
-# Create your models here.
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
-class StudentProfile(models.Model):
-    user = models.ForeignKey("accounts.User", on_delete=models.CASCADE)
-    first_name = models.CharField(max_length=200)
-    last_name = models.CharField(max_length=200)
+class Course(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
     fee = models.DecimalField(max_digits=10, decimal_places=2)
-    fully_paid = models.BooleanField(default=False)
-    courses = models.ManyToManyField("teacher.Course")
-    slug = models.SlugField(unique=True, blank=True, null=True)
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+class AdmissionBatch(models.Model):
+    name = models.CharField(max_length=100)
+    year = models.PositiveIntegerField()
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    def __str__(self):
+        return f"{self.name} ({self.year})"
+
+class Student(models.Model):
+    class Gender(models.TextChoices):
+        MALE = 'M', 'Male'
+        FEMALE = 'F', 'Female'
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name='student_profile'  # Unique related_name
+    )
+    student_id = models.CharField(max_length=20, unique=True)
+    admission_batch = models.ForeignKey(AdmissionBatch, on_delete=models.SET_NULL, null=True)
+    gender = models.CharField(max_length=1, choices=Gender.choices)
+    dob = models.DateField()
+
+
+class StudentCourse(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    batch = models.CharField(max_length=50)
+    enrollment_date = models.DateField(auto_now_add=True)
 
     @property
     def balance(self):
-        total_paid = self.student_payments.aggregate(Sum("amount"))["amount__sum"] or 0
-        return self.fee - total_paid
+        total_paid = self.payment_set.aggregate(total=Sum('amount'))['total'] or 0
+        return self.course.fee - total_paid
 
-    def save(self, *args, **kwargs):
-
-        self.fully_paid = self.balance == 0
-
-        if not self.slug:
-            self.slug = slugify(self.user.username)
-
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"Student {self.first_name} {self.last_name} Created"
-
-
-class StudentPayment(models.Model):
-    student = models.ForeignKey(
-        StudentProfile,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="student_payments",
-    )
+class Payment(models.Model):
+    enrollment = models.ForeignKey(StudentCourse, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    date_paid = models.DateTimeField(auto_now_add=True)
-
-    date_paid = models.DateTimeField(auto_now_add=True)
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        if self.student:
-            self.student.save()
-
-    def __str__(self):
-        return f"Payment of {self.amount} to {self.student.first_name} {self.student.last_name}"
-
-
-class StudentAdmission(models.Model):
-    student = models.ForeignKey(StudentProfile, on_delete=models.SET_NULL, null=True)
-    batch = models.CharField(max_length=200)
-    date_start = models.DateField(auto_now_add=True)
-    date_end = models.DateField(null=True, blank=True)
+    payment_date = models.DateField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=[('PENDING', 'Pending'), ('COMPLETED', 'Completed')])
